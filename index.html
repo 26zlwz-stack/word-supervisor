@@ -29,11 +29,11 @@ body {
     padding: 20px 0;
 }
 
-.header .heart {
+.heart {
     font-size: 42px;
 }
 
-.header h1 {
+h1 {
     margin: 8px 0 5px;
     font-size: 27px;
 }
@@ -78,7 +78,6 @@ body {
     width: 100%;
     height: 100%;
     background: #222;
-    border-radius: 10px;
 }
 
 .streak {
@@ -104,9 +103,10 @@ button.done {
     color: #666;
 }
 
-.message-title {
+.message-title,
+.history-title {
     font-weight: 700;
-    margin-bottom: 10px;
+    margin-bottom: 12px;
 }
 
 .message {
@@ -114,11 +114,6 @@ button.done {
     border-radius: 14px;
     padding: 16px;
     line-height: 1.6;
-}
-
-.history-title {
-    font-weight: 700;
-    margin-bottom: 14px;
 }
 
 .day {
@@ -154,4 +149,214 @@ button.done {
 <div class="container">
 
     <div class="header">
-        <
+        <div class="heart">❤️</div>
+        <h1>今日背词</h1>
+        <div class="date" id="date"></div>
+    </div>
+
+    <div class="card goal">
+
+        <div class="goal-title">今日目标</div>
+
+        <div class="number">30</div>
+
+        <div>个单词</div>
+
+        <div class="progress">
+            <div class="progress-bar"></div>
+        </div>
+
+        <div class="streak">
+            🔥 连续打卡 <strong id="streak">0</strong> 天
+        </div>
+
+        <button id="checkButton" onclick="checkIn()">
+            我已经背完啦 ✅
+        </button>
+
+    </div>
+
+    <div class="card">
+
+        <div class="message-title">
+            💌 监督员留言
+        </div>
+
+        <div class="message">
+            今天也要好好背哦！<br>
+            不许偷懒，30 个单词而已，加油 ❤️
+        </div>
+
+    </div>
+
+    <div class="card">
+
+        <div class="history-title">
+            📅 最近 7 天
+        </div>
+
+        <div id="history"></div>
+
+    </div>
+
+    <div class="footer">
+        ❤️ 好好背单词，天天进步
+    </div>
+
+</div>
+
+<script>
+
+function getDateString(date) {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, "0");
+    const d = String(date.getDate()).padStart(2, "0");
+    return y + "-" + m + "-" + d;
+}
+
+const today = new Date();
+const todayString = getDateString(today);
+
+document.getElementById("date").innerText =
+    today.getFullYear() + "年" +
+    (today.getMonth() + 1) + "月" +
+    today.getDate() + "日";
+
+
+function getRecords() {
+    return JSON.parse(localStorage.getItem("wordRecords") || "{}");
+}
+
+
+function checkIn() {
+
+    const records = getRecords();
+
+    if (records[todayString]) {
+        return;
+    }
+
+    records[todayString] = true;
+
+    localStorage.setItem(
+        "wordRecords",
+        JSON.stringify(records)
+    );
+
+    updatePage();
+}
+
+
+function calculateStreak(records) {
+
+    let streak = 0;
+    let date = new Date();
+
+    while (true) {
+
+        const key = getDateString(date);
+
+        if (!records[key]) {
+            break;
+        }
+
+        streak++;
+
+        date.setDate(date.getDate() - 1);
+    }
+
+    return streak;
+}
+
+
+function updatePage() {
+
+    const records = getRecords();
+
+    const button =
+        document.getElementById("checkButton");
+
+    const streak =
+        document.getElementById("streak");
+
+    if (records[todayString]) {
+
+        button.innerText = "今日已完成 ❤️";
+        button.classList.add("done");
+
+    } else {
+
+        button.innerText = "我已经背完啦 ✅";
+        button.classList.remove("done");
+
+    }
+
+    streak.innerText =
+        calculateStreak(records);
+
+    const history =
+        document.getElementById("history");
+
+    history.innerHTML = "";
+
+    for (let i = 0; i < 7; i++) {
+
+        const date = new Date();
+
+        date.setDate(
+            date.getDate() - i
+        );
+
+        const key = getDateString(date);
+
+        let label;
+
+        if (i === 0) {
+            label = "今天";
+        } else if (i === 1) {
+            label = "昨天";
+        } else if (i === 2) {
+            label = "前天";
+        } else {
+            label = i + " 天前";
+        }
+
+        const row =
+            document.createElement("div");
+
+        row.className = "day";
+
+        const left =
+            document.createElement("span");
+
+        left.innerText = label;
+
+        const right =
+            document.createElement("span");
+
+        if (records[key]) {
+
+            right.innerText = "✅ 已完成";
+            right.className = "ok";
+
+        } else {
+
+            right.innerText = "未完成";
+            right.className = "no";
+
+        }
+
+        row.appendChild(left);
+        row.appendChild(right);
+
+        history.appendChild(row);
+    }
+}
+
+
+updatePage();
+
+</script>
+
+</body>
+</html>
